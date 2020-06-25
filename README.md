@@ -124,7 +124,7 @@ volumes:
 ```
 * run docker compose yaml file.
 ```
-docker-compose.yaml
+docker-compose up
 ```
 You will see the list of addresses, where MinIO servers are running. Choose any one server, for example "http://host-ip:9002", you should see MinIO running.
 ![MinIO login](/images/minio1.png)
@@ -145,7 +145,7 @@ Access the NiFi user interface using http://ip:8086/nifi. Here we are creating t
 
 ### Creating a processor group to generate a sample iot data and publish as a MQTT topic 
 The overall processor group looks like:
-![Overview of two Processors ](/images/processor1.png)
+![Overview of two Processors ](/images/minio4.png)
 
 
 * The GenerateFlowFile processor can be used to generate a sample iot data. 
@@ -157,7 +157,7 @@ Modify the properties:=
 Broker URI:tcp://ip:1883,client ID: you can choose freely , Topic:Data
 ![GenerateFlowFile ](/images/PublishMQTT.png)
 
-### Creating a processor group to consume MQTT topic and insert into Inlfuxdb 
+### Creating a processor group to consume MQTT topic and insert into MinIO server
 
 * ConsumeMQTT processor can be used to consume the MQTT topic. Modify the following properties such as Broker URL:tcp://ip:1883,client ID: you can choose freely , Topic:Data
 
@@ -168,9 +168,13 @@ We are using ReplaceText processor to append the measurement name, tag values to
 
 ![ReplaceText ](/images/ReplaceText.png)
 
-* PutInfluxdb processor can be used to insert data in to influxdb and modify the properties such as Database name:iot, Influxdb connection URL: http://ip:8086
+* PutS3Object processor can be used to insert data in to MinIo object storage server and modify the properties such as 
+**Bucket : Name of bucket created in earlier step, Ex: simple
+**Access Key ID :minio(you can get this value in docker-compose.yaml file)
+**Secret Key ID : minio123(you can get this value in docker-compose.yaml file)
+**Endpoint override URL: http://host-ip:9002
 
-![Influxdb ](/images/influxdb.png)
+![S3 Storage ](/images/minio3.png)
 
 
 
