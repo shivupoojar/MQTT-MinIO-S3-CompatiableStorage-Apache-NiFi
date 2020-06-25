@@ -1,11 +1,11 @@
 
-# Storing an IoT data into InfluxDB database server using Apache NiFi
+# Storing an IoT data into MinIO S3 Compatible storage using Apache NiFi
 
-Th objective of the project is to collect the IoT sensed data from sensors using light weight MQTT protocol and insert into InfluxDB time series database using Apache NiFi processors.
+Th objective of the project is to collect the IoT sensed data from sensors using light weight MQTT protocol and insert into MinIO object storage using Apache NiFi processors.
  The following are the requirements to run the project:
  * Apache Nifi
  * MQTT server
- * InfluxDb database server
+ * MinIO Object storage server
  
  
 ## Installing an Apache NiFi 
@@ -29,39 +29,112 @@ Mosquitto runs at port number:1883, access url could be tcp://INSTANCE_IP:1883
  ```
  sudo apt-get install mosquitto-clients
  ``` 
-## Installing the InfluxDB server :
-Install the influxDB server in docker container :
-```
-docker run -p 8086:8086 \
-      -v $PWD:/var/lib/influxdb \
-      influxdb
- ```
-Create the database with name "iot" using influxDB cli.
-* To access the influxdb cli exec to influxdb docker container 
-```
-sudo docker exec -it 31c9e202139f /bin/bash
-```
-* Access the influx cli
-```
-influx
-```
-* Create a database with name "iot"
-```
-create database iot
-use iot
+## Installing the MinIO server :
+Ref: https://docs.min.io/docs/minio-docker-quickstart-guide.html
+Install MinIO using docker compose, However there are multiple ways of deploying MinIO server using docker such as docker swarm, docker compose or single docker container.
+* Download docker-compose.yml from above mentioned link. it looks like.
 ```
 
-* Insert a sample data using influxDB query
+version: '3.7'
+
+# starts 4 docker containers running minio server instances. Each
+# minio server's web interface will be accessible on the host at port
+# 9001 through 9004.
+services:
+  minio1:
+    image: minio/minio:RELEASE.2020-06-22T03-12-50Z
+    volumes:
+      - data1-1:/data1
+      - data1-2:/data2
+    ports:
+      - "9001:9000"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    command: server http://minio{1...4}/data{1...2}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio2:
+    image: minio/minio:RELEASE.2020-06-22T03-12-50Z
+    volumes:
+      - data2-1:/data1
+      - data2-2:/data2
+    ports:
+      - "9002:9000"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    command: server http://minio{1...4}/data{1...2}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio3:
+    image: minio/minio:RELEASE.2020-06-22T03-12-50Z
+    volumes:
+      - data3-1:/data1
+      - data3-2:/data2
+    ports:
+      - "9003:9000"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    command: server http://minio{1...4}/data{1...2}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio4:
+    image: minio/minio:RELEASE.2020-06-22T03-12-50Z
+    volumes:
+      - data4-1:/data1
+      - data4-2:/data2
+    ports:
+      - "9004:9000"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    command: server http://minio{1...4}/data{1...2}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+## By default this config uses default local driver,
+## For custom volumes replace with volume driver configuration.
+volumes:
+  data1-1:
+  data1-2:
+  data2-1:
+  data2-2:
+  data3-1:
+  data3-2:
+  data4-1:
+  data4-2:
+
 ```
-INSERT temperature,machine=unit42,type=assembly external=89,internal=197
+* run docker compose yaml file.
 ```
-The query consists of Measurement, tags and fields
+docker-compose.yaml
+```
+You will see the list of addresses, where MinIO servers are running. Choose any one server, for example "http://host-ip:9002", you should see MinIO running.
+![MinIO login](/images/minio1.png)
 
-Measurements = temperature
+Enter Access Key:minio
 
-Tags = machine, type
+Enter secret key : minio123
 
-Fields= external,internal
+* Create a bucket by clicking on + symbol
+![Bucker Create](/images/minio2.png)
 
 ## Creating Data pipeline using Apache NiFi
 Access the NiFi user interface using http://ip:8086/nifi. Here we are creating two processor groups 
