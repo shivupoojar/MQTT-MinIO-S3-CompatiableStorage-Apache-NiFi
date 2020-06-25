@@ -169,9 +169,13 @@ We are using ReplaceText processor to append the measurement name, tag values to
 ![ReplaceText ](/images/ReplaceText.png)
 
 * PutS3Object processor can be used to insert data in to MinIo object storage server and modify the properties such as 
+
 **Bucket : Name of bucket created in earlier step, Ex: simple
+
 **Access Key ID :minio(you can get this value in docker-compose.yaml file)
+
 **Secret Key ID : minio123(you can get this value in docker-compose.yaml file)
+
 **Endpoint override URL: http://host-ip:9002
 
 ![S3 Storage ](/images/minio3.png)
